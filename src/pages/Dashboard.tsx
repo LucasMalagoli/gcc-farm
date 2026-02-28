@@ -109,15 +109,25 @@ const Dashboard = ({ appState, setAppState }: PageProps) => {
                   );
                 }
 
+                const progress = appState.progress[character.id]?.[challenge.id] ?? 0;
+                let backgroundColor = undefined;
+                if (isRandomized) {
+                  backgroundColor = 'rgba(94, 146, 243, 0.15)';
+                } else if (challenge.limit !== null && challenge.limit > 0) {
+                  if (progress >= challenge.limit) {
+                    backgroundColor = 'rgba(102, 187, 106, 0.15)';
+                  } else if (progress > 0) {
+                    backgroundColor = 'rgba(255, 193, 7, 0.15)';
+                  }
+                }
+
                 return (
                   <TableCell
                     key={challenge.id}
                     align="center"
                     ref={isRandomized ? randomizedCellRef : null}
                     sx={{
-                      backgroundColor: isRandomized
-                        ? 'rgba(94, 146, 243, 0.15)'
-                        : 'inherit',
+                      backgroundColor,
                       color: 'inherit',
                       transition: 'background-color 0.5s ease',
                     }}
@@ -126,20 +136,7 @@ const Dashboard = ({ appState, setAppState }: PageProps) => {
                       type="number"
                       size="small"
                       variant="outlined"
-                      value={appState.progress[character.id]?.[challenge.id] ?? 0}
-                      onClick={() => {
-                        setAppState({
-                          ...appState,
-                          progress: {
-                            ...appState.progress,
-                            [character.id]: {
-                              ...appState.progress[character.id],
-                              [challenge.id]:
-                                (appState.progress[character.id]?.[challenge.id] ?? 0) + 1,
-                            },
-                          },
-                        });
-                      }}
+                      value={progress}
                       onChange={(e) =>
                         handleProgressChange(
                           character.id,
