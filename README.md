@@ -1,73 +1,71 @@
-# React + TypeScript + Vite
+# GCC Farm
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+GCC Farm is a React application designed to manage and track daily and weekly challenges across multiple characters. It provides a centralized dashboard to view progress, a randomizer to gamify task selection, and flexible configuration options.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+*   **Dashboard**:
+    *   Grid view of Characters vs. Challenges.
+    *   Track progress counts against limits.
+    *   Visual icons for Daily (Loop) and Weekly (EventRepeat) resets.
+    *   Tooltips showing specific reset days for weekly challenges.
+    *   Support for "N/A" challenges per character.
+*   **Randomizer**:
+    *   Roll the dice to randomly select an available (uncompleted) challenge.
+    *   Filters out challenges that are already completed or not allowed for a character.
+*   **Configuration**:
+    *   **Characters**: Add, remove, reorder, and customize allowed challenges for each character.
+    *   **Challenges**: Create challenges with specific reset rules (Daily, Weekly, Never), limits, and custom weekly reset days.
+    *   **Data Sync**: Save and load your data directly to/from a local JSON file using the File System Access API.
+*   **Modern Design**: Dark-themed UI built with Material UI.
 
-## React Compiler
+## Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Prerequisites
 
-## Expanding the ESLint configuration
+*   Node.js (LTS version recommended)
+*   npm or yarn
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Installation
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1.  Clone the repository.
+2.  Install dependencies:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+    ```bash
+    npm install
+    ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Running Locally
+
+Start the development server:
+
+```bash
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The application will be available at `http://localhost:5173` (default Vite port).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Usage
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Data Persistence
+
+This application does **not** use a backend database. Instead, it relies on a local JSON file on your computer to store your progress.
+
+1.  Navigate to the **Configuration** page.
+2.  **Create New File**: Creates a new JSON file on your system to store data.
+3.  **Link to Existing File**: Select an existing JSON file to load data from.
+4.  Once linked, the application will automatically save your progress to the file.
+5.  The browser will remember the file handle (via IndexedDB), so you don't need to re-link it every time you refresh, though you may need to grant permission again upon reopening the browser.
+
+### Resets
+
+*   **Daily Resets**: Occur at 00:00 (Sao Paulo Time).
+*   **Weekly Resets**: Occur on the specific day configured for the challenge at 00:00 (Sao Paulo Time).
+
+## Tech Stack
+
+*   React
+*   TypeScript
+*   Vite
+*   Material UI
+*   React Router
