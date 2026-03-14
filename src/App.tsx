@@ -97,6 +97,53 @@ const modalStyle = {
   textAlign: 'center',
 };
 
+function applyResets(state: AppState): AppState {
+  const now = new Date();
+  const spFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  const spDateString = spFormatter.format(now);
+  const todayResetTime = new Date(`${spDateString}T00:00:00-03:00`).getTime();
+
+  // @ts-ignore
+  const lastCheck = state.lastResetCheck || 0;
+  let newState = { ...state };
+  let hasChanges = false;
+
+  newState.challenges.forEach((chal) => {
+    let shouldReset = false;
+    if (chal.reset === ChallengeReset.Daily) {
+      if (lastCheck < todayResetTime) shouldReset = true;
+    } else if (chal.reset === ChallengeReset.Weekly) {
+      // @ts-ignore
+      const weeklyDay = chal.weeklyDay !== undefined ? chal.weeklyDay : 2; // Default Tuesday
+      const currentDayOfWeek = new Date(todayResetTime).getUTCDay();
+      let daysSinceWeeklyReset = currentDayOfWeek - weeklyDay;
+      if (daysSinceWeeklyReset < 0) daysSinceWeeklyReset += 7;
+      const thisWeekResetTime =
+        todayResetTime - daysSinceWeeklyReset * 24 * 60 * 60 * 1000;
+      if (lastCheck < thisWeekResetTime) shouldReset = true;
+    }
+
+    if (shouldReset) {
+      newState.characters.forEach((char) => {
+        newState.progress[char.id][chal.id] = 0;
+      });
+      hasChanges = true;
+    }
+  });
+
+  if (hasChanges || lastCheck < Date.now()) {
+    // @ts-ignore
+    newState.lastResetCheck = Date.now();
+  }
+
+  return newState;
+}
+
 function App() {
   const [appState, setAppState] = useState<AppState>(loadState());
   const [randomizerOpen, setRandomizerOpen] = useState(false);
@@ -172,52 +219,8 @@ function App() {
         await del('fileHandle');
       }
 
-      // Now, run resets on the determined initial state
-      const now = new Date();
-      const spFormatter = new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'America/Sao_Paulo',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      });
-      const spDateString = spFormatter.format(now);
-      const todayResetTime = new Date(`${spDateString}T00:00:00-03:00`).getTime();
-
-      // @ts-ignore
-      const lastCheck = initialState.lastResetCheck || 0;
-      let newState = { ...initialState };
-      let hasChanges = false;
-
-      newState.challenges.forEach((chal) => {
-        let shouldReset = false;
-        if (chal.reset === ChallengeReset.Daily) {
-          if (lastCheck < todayResetTime) shouldReset = true;
-        } else if (chal.reset === ChallengeReset.Weekly) {
-          // @ts-ignore
-          const weeklyDay = chal.weeklyDay !== undefined ? chal.weeklyDay : 2; // Default Tuesday
-          const currentDayOfWeek = new Date(todayResetTime).getUTCDay();
-          let daysSinceWeeklyReset = currentDayOfWeek - weeklyDay;
-          if (daysSinceWeeklyReset < 0) daysSinceWeeklyReset += 7;
-          const thisWeekResetTime =
-            todayResetTime - daysSinceWeeklyReset * 24 * 60 * 60 * 1000;
-          if (lastCheck < thisWeekResetTime) shouldReset = true;
-        }
-
-        if (shouldReset) {
-          newState.characters.forEach((char) => {
-            newState.progress[char.id][chal.id] = 0;
-          });
-          hasChanges = true;
-        }
-      });
-
-      if (hasChanges || lastCheck < Date.now()) {
-        // @ts-ignore
-        newState.lastResetCheck = Date.now();
-      }
-
       // Set the final, fully initialized state
-      setAppState(newState);
+      setAppState(applyResets(initialState));
       setIsInitialized(true);
     };
 
@@ -244,7 +247,7 @@ function App() {
       const json = JSON.parse(contents);
 
       if (validateState(json)) {
-        setAppState(sanitizeState(json));
+        setAppState(applyResets(sanitizeState(json)));
         setFileHandle(handle);
         await set('fileHandle', handle); // Persist handle
       } else {
